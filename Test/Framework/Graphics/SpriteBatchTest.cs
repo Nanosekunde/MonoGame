@@ -63,6 +63,17 @@ namespace MonoGame.Tests.Graphics {
             Assert.Throws<InvalidOperationException>(() => _spriteBatch.End());
         }
         
+        [Test]
+        public void NullDeviceShouldThrowArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => 
+            {                
+                var spriteBatch = new SpriteBatch(null);
+                spriteBatch.Dispose();
+            });
+            GC.GetTotalMemory(true); // collect uninitialized spriteBatch
+        }
+        
 		[Test]
 		public void Draw_without_blend ()
 		{
@@ -404,7 +415,7 @@ namespace MonoGame.Tests.Graphics {
         // I think this is due to differences in how downsampling is done by default
         // (it makes a big difference here because the textures are so small).
         // There are possibly also some differences because of how rasterization is handled.
-        [Ignore]
+        [Ignore("OpenGL produces a slightly different result")]
 #endif
         public void Draw_many()
         {
@@ -445,10 +456,12 @@ namespace MonoGame.Tests.Graphics {
             _spriteBatch.End();
 
             // Test viewport/effect BasicEffect (Vertex & Pixel shader)
-#if DIRECTX
             Matrix halfPixelOffset = Matrix.Identity;
-#else            
-            Matrix halfPixelOffset = Matrix.CreateTranslation(-0.5f, -0.5f, 0);
+#if XNA 
+            halfPixelOffset = Matrix.CreateTranslation(-0.5f, -0.5f, 0);
+#else // MG
+            if (gd.UseHalfPixelOffset)
+                halfPixelOffset = Matrix.CreateTranslation(-0.5f, -0.5f, 0);
 #endif
 
             _effect.Projection = halfPixelOffset * Matrix.CreateOrthographicOffCenter(0, gd.Viewport.Width, gd.Viewport.Height, 0, 0, 1);

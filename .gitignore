@@ -89,6 +89,7 @@ Test/*.csproj
 #Mac Package Files
 *.pkg
 *.mpack
+**/packages
 
 #Nuget Packages
 **/*.nupkg
@@ -98,3 +99,7 @@ Test/*.csproj
 
 Installers/MacOS/Scripts/Framework/postinstall
 IDE/MonoDevelop/MonoDevelop.MonoGame/templates/Common/MonoGame.Framework.dll.config
+
+# CAKE
+Cake/**
+!Cake/packages.config

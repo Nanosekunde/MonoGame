@@ -336,7 +336,7 @@ namespace MonoGame.Tools.Pipeline
         }
 
         public static void Unload()
-        {            
+        {
             _importers = null;
             Importers = null;
          
@@ -447,7 +447,7 @@ namespace MonoGame.Tools.Pipeline
             foreach (var path in assemblyPaths)
             {
                 try
-                {                    
+                {
                     var a = Assembly.LoadFrom(path);
                     var types = a.GetTypes();
                     ProcessTypes(types);

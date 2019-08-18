@@ -10,6 +10,9 @@ using TwoMGFX;
 
 namespace MonoGame.Tests.ContentPipeline
 {
+#if DESKTOPGL
+    [Ignore("Building effects is only supported on Windows.")]
+#endif
     class EffectProcessorTests
     {
         class ImporterContext : ContentImporterContext
@@ -53,12 +56,12 @@ namespace MonoGame.Tests.ContentPipeline
             Assert.That(mgDependencies, Has.Count.EqualTo(1));
             Assert.That(Path.GetFileName(mgDependencies[0]), Is.EqualTo("PreprocessorInclude.fxh"));
 
-            Assert.That(mgPreprocessed, Is.Not.StringContaining("Foo"));
-            Assert.That(mgPreprocessed, Is.StringContaining("Bar"));
-            Assert.That(mgPreprocessed, Is.Not.StringContaining("Baz"));
+            Assert.That(mgPreprocessed, Does.Not.Contain("Foo"));
+            Assert.That(mgPreprocessed, Does.Contain("Bar"));
+            Assert.That(mgPreprocessed, Does.Not.Contain("Baz"));
 
-            Assert.That(mgPreprocessed, Is.StringContaining("FOO"));
-            Assert.That(mgPreprocessed, Is.Not.StringContaining("BAR"));
+            Assert.That(mgPreprocessed, Does.Contain("FOO"));
+            Assert.That(mgPreprocessed, Does.Not.Contain("BAR"));
 
             // Check that we can actually compile this file.
             BuildEffect(effectFile, TargetPlatform.Windows);

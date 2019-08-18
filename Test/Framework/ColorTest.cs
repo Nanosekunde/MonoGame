@@ -6,7 +6,7 @@ namespace MonoGame.Tests.Framework
     class ColorTest
     {
         // Contains a test case for each constructor type
-        private object[] _ctorTestCases =
+        private static object[] _ctorTestCases =
         {
 #if !XNA
             new object[] { new Color(new Color(64, 128, 192), 32), 64, 128, 192, 32 },
@@ -52,7 +52,7 @@ namespace MonoGame.Tests.Framework
             Assert.That(color.A, Is.EqualTo(32));
         }
 #endif
-        
+
         [Test]
         public void FromNonPremultiplied_Int()
         {
@@ -102,46 +102,65 @@ namespace MonoGame.Tests.Framework
         {
             var color = new Color(1, 2, 3, 4);
 
+            // Operator comparison
+            Assert.AreEqual(color * 1.0f, 1.0f * color);
+
             // Test 1.0 scale.
             Assert.AreEqual(color, color * 1.0f);
+            Assert.AreEqual(color, 1.0f * color);
             Assert.AreEqual(color, Color.Multiply(color, 1.0f));
             Assert.AreEqual(color * 1.0f, Color.Multiply(color, 1.0f));
+            Assert.AreEqual(1.0f * color, Color.Multiply(color, 1.0f));
 
             // Test 0.999 scale.
             var almostOne = new Color(0, 1, 2, 3);
             Assert.AreEqual(almostOne, color * 0.999f);
+            Assert.AreEqual(almostOne, 0.999f * color);
             Assert.AreEqual(almostOne, Color.Multiply(color, 0.999f));
             Assert.AreEqual(color * 0.999f, Color.Multiply(color, 0.999f));
+            Assert.AreEqual(0.999f * color, Color.Multiply(color, 0.999f));
 
             // Test 1.001 scale.
             Assert.AreEqual(color, color * 1.001f);
+            Assert.AreEqual(color, 1.001f * color);
             Assert.AreEqual(color, Color.Multiply(color, 1.001f));
             Assert.AreEqual(color * 1.001f, Color.Multiply(color, 1.001f));
+            Assert.AreEqual(1.001f * color, Color.Multiply(color, 1.001f));
 
             // Test 0.0 scale.
             Assert.AreEqual(Color.Transparent, color * 0.0f);
+            Assert.AreEqual(Color.Transparent, 0.0f * color);
             Assert.AreEqual(Color.Transparent, Color.Multiply(color, 0.0f));
             Assert.AreEqual(color * 0.0f, Color.Multiply(color, 0.0f));
+            Assert.AreEqual(0.0f * color, Color.Multiply(color, 0.0f));
 
             // Test 0.001 scale.
             Assert.AreEqual(Color.Transparent, color * 0.001f);
+            Assert.AreEqual(Color.Transparent, 0.001f * color);
             Assert.AreEqual(Color.Transparent, Color.Multiply(color, 0.001f));
             Assert.AreEqual(color * 0.001f, Color.Multiply(color, 0.001f));
+            Assert.AreEqual(0.001f * color, Color.Multiply(color, 0.001f));
 
             // Test -0.001 scale.
             Assert.AreEqual(Color.Transparent, color * -0.001f);
+            Assert.AreEqual(Color.Transparent, -0.001f * color);
             Assert.AreEqual(Color.Transparent, Color.Multiply(color, -0.001f));
             Assert.AreEqual(color * -0.001f, Color.Multiply(color, -0.001f));
+            Assert.AreEqual(-0.001f * color, Color.Multiply(color, -0.001f));
 
             // Test for overflow.
             Assert.AreEqual(Color.White, color * 300.0f);
+            Assert.AreEqual(Color.White, 300.0f * color);
             Assert.AreEqual(Color.White, Color.Multiply(color, 300.0f));
             Assert.AreEqual(color * 300.0f, Color.Multiply(color, 300.0f));
+            Assert.AreEqual(300.0f * color, Color.Multiply(color, 300.0f));
 
             // Test for underflow.
             Assert.AreEqual(Color.Transparent, color * -1.0f);
+            Assert.AreEqual(Color.Transparent, -1.0f * color);
             Assert.AreEqual(Color.Transparent, Color.Multiply(color, -1.0f));
             Assert.AreEqual(color * -1.0f, Color.Multiply(color, -1.0f));
+            Assert.AreEqual(-1.0f * color, Color.Multiply(color, -1.0f));
         }
 
         [Test]
@@ -173,5 +192,32 @@ namespace MonoGame.Tests.Framework
             Assert.AreEqual(color1, Color.Lerp(color2, color1, 1.0f));
             Assert.AreEqual(half, Color.Lerp(color2, color1, 0.5f));
         }
+
+#if !XNA
+        [Test]
+        public void Deconstruct()
+        {
+            Color color = new Color(255, 255, 255);
+
+            float r, g, b;
+
+            color.Deconstruct(out r, out g, out b);
+
+            Assert.AreEqual(r, color.R);
+            Assert.AreEqual(g, color.G);
+            Assert.AreEqual(b, color.B);
+
+            Color color2 = new Color(255, 255, 255, 255);
+
+            float r2, g2, b2, a2;
+
+            color2.Deconstruct(out r2, out g2, out b2, out a2);
+
+            Assert.AreEqual(r2, color2.R);
+            Assert.AreEqual(g2, color2.G);
+            Assert.AreEqual(b2, color2.B);
+            Assert.AreEqual(a2, color2.A);
+        }
+#endif
     }
 }

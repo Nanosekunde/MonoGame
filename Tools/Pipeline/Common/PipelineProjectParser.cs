@@ -24,11 +24,27 @@ namespace MonoGame.Tools.Pipeline
         private readonly OpaqueDataDictionary _processorParams = new OpaqueDataDictionary();
         
         private string _processor;
+
+        private List<string> _errors;
         
         #endregion
 
         #region CommandLineParameters
-        
+
+        // make sure working dir is recognized
+        [CommandLineParameter(
+            Name = "workingDir",
+            ValueName = "directoryPath")]
+        public string WorkingDir
+        {
+            set
+            {
+                var projectDir = Path.GetDirectoryName(_project.OriginalPath);
+                if (!value.Equals(projectDir) && !value.Equals(Directory.GetCurrentDirectory()))
+                    _errors.Add("Nested response files or changing the working directory are not supported from Pipeline Tool.");
+            }
+        }
+
         [CommandLineParameter(
             Name = "outputDir",
             ValueName = "directoryPath",
@@ -151,6 +167,17 @@ namespace MonoGame.Tools.Pipeline
 
         public bool AddContent(string sourceFile, bool skipDuplicates)
         {
+            string link = null;
+
+            if (sourceFile.Contains(";"))
+            {
+                var split = sourceFile.Split(';');
+                sourceFile = split[0];
+
+                if (split.Length > 0)
+                    link = split[1];
+            }
+
             // Make sure the source file is relative to the project.
             var projectDir = ProjectDirectory + Path.DirectorySeparatorChar;
 
@@ -173,10 +200,10 @@ namespace MonoGame.Tools.Pipeline
                 Observer = _observer,
                 BuildAction = BuildAction.Build,
                 OriginalPath = sourceFile,
+                DestinationPath = string.IsNullOrEmpty(link) ? sourceFile : link,
                 ImporterName = Importer,
                 ProcessorName = Processor,
-                ProcessorParams = new OpaqueDataDictionary(),
-                Exists = File.Exists(projectDir + sourceFile)
+                ProcessorParams = new OpaqueDataDictionary()
             };
             _project.ContentItems.Add(item);
 
@@ -195,6 +222,17 @@ namespace MonoGame.Tools.Pipeline
             Description = "Copy the content source file verbatim to the output directory.")]
         public void OnCopy(string sourceFile)
         {
+            string link = null;
+
+            if (sourceFile.Contains(";"))
+            {
+                var split = sourceFile.Split(';');
+                sourceFile = split[0];
+
+                if (split.Length > 0)
+                    link = split[1];
+            }
+
             // Make sure the source file is relative to the project.
             var projectDir = ProjectDirectory + Path.DirectorySeparatorChar;
 
@@ -210,8 +248,8 @@ namespace MonoGame.Tools.Pipeline
             {
                 BuildAction = BuildAction.Copy,
                 OriginalPath = sourceFile,
-                ProcessorParams = new OpaqueDataDictionary(),
-                Exists = File.Exists(projectDir + sourceFile)
+                DestinationPath = string.IsNullOrEmpty(link) ? sourceFile : link,
+                ProcessorParams = new OpaqueDataDictionary()
             };
             _project.ContentItems.Add(item);
 
@@ -232,6 +270,7 @@ namespace MonoGame.Tools.Pipeline
 
         public void OpenProject(string projectFilePath, MGBuildParser.ErrorCallback errorCallback)
         {
+            _errors = new List<string>();
             _project.ContentItems.Clear();
 
             // Store the file name for saving later.
@@ -244,10 +283,13 @@ namespace MonoGame.Tools.Pipeline
                 parser.OnError += errorCallback;
 
             var commands = new string[]
-                {
-                    string.Format("/@:{0}", projectFilePath),
-                };
+            {
+                string.Format("/@:{0}", projectFilePath),
+            };
             parser.Parse(commands);
+
+            if (_errors.Any())
+                errorCallback('\n' + string.Join("\n", _errors.ToArray()), new object[0]);
         }
 
         public void SaveProject()
@@ -315,7 +357,10 @@ namespace MonoGame.Tools.Pipeline
 
                 if (i.BuildAction == BuildAction.Copy)
                 {
-                    line = string.Format(lineFormat, "copy", i.OriginalPath);
+                    string path = i.OriginalPath;
+                    if (i.OriginalPath != i.DestinationPath)
+                        path += ";" + i.DestinationPath;
+                    line = string.Format(lineFormat, "copy", path);
                     io.WriteLine(line);
                     io.WriteLine();
                 }
@@ -368,7 +413,10 @@ namespace MonoGame.Tools.Pipeline
                         }
                     }
 
-                    line = string.Format(lineFormat, "build", i.OriginalPath);
+                    string buildValue = i.OriginalPath;
+                    if (i.OriginalPath != i.DestinationPath)
+                        buildValue += ";" + i.DestinationPath;
+                    line = string.Format(lineFormat, "build", buildValue);
                     io.WriteLine(line);
                     io.WriteLine();
                 }
